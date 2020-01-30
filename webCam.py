@@ -6,12 +6,11 @@ redLower = (0,10,10)                                                #100,130,50 
 redUpper = (80,255,255)                                             #200,200,130
 
 def adaptive_thresh(img,thresh,max,type):
-   
     if(type == "bin"):
         ret,th1 = cv2.threshold(img,thresh,max,cv2.THRESH_BINARY) 
         return th1
     elif(type == "mean"):
-        img_blur = cv2.medianBlur(img,5)
+        img_blur = cv2.medianBlur(img,5).astype('uint8')
         ret,th1 = cv2.threshold(img_blur,thresh,max,cv2.THRESH_BINARY)
         th2 = cv2.adaptiveThreshold(th1,max,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,11,2)
         return th2
@@ -43,13 +42,14 @@ if __name__ == "__main__":
         mask = cv2.inRange(frame, redLower, redUpper)               #har ingen anelse hvordan mask opplegget fungerer, men det må til for å filterer bort alt fra bildet
         mask = cv2.erode(mask, None, iterations=0)                  #som ikke er rødt
         mask = cv2.dilate(mask, None, iterations=0) 
+        #frame_Adapt = cv2.imread(frame, CV_8UC1)
         frame = cv2.bitwise_and(frame,frame,mask = mask)            #dette gir et rart bilde
         cv2.imshow("34", frame)
        
-     #Adaptive thresh forsøk
-        th2 = adaptive_thresh(frame,127,255,"mean")
-        #th1 = adaptive_thresh(frame,127,255,"gauss")
-        th = adaptive_thresh(frame,127,255,"bin")
+        #Adaptive thresh forsøk
+        #th2 = adaptive_thresh(frame,127,255,"mean")
+        th1 = adaptive_thresh(frame,127,255,"mean")
+        #th = adaptive_thresh(frame_Adapt,127,255,"bin")
         #cv2.imshow("mean", th2)
         # cv2.imshow("gauss", th1)
         #cv2.imshow("bin", th)
