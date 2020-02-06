@@ -2,23 +2,32 @@ import cv2
 import blobDetect as bd
 import numpy as np
 
-redLower = (0,10,10)                                                #100,130,50 skal være for å filtrere rød farge
-redUpper = (80,255,255)                                             #200,200,130
+redLower = (20,10,10)                                                #100,130,50 skal være for å filtrere rød farge
+redUpper = (100,255,255)                                             #200,200,130
 
 def adaptive_thresh(img,thresh,max,type):
-    if(type == "bin"):
-        ret,th1 = cv2.threshold(img,thresh,max,cv2.THRESH_BINARY) 
-        return th1
+    if(type == "otsu"):
+        #Otsu thersholding 
+        blur = cv2.GaussianBlur(img,(5,5),0)                                                        #Gaussian blur
+        ret3,img = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)                      #Ny metode for å filterere bilde (usikkert om vi kan brukde det)
+        return img 
     elif(type == "mean"):
-        img_blur = cv2.medianBlur(img,5).astype('uint8')
-        ret,th1 = cv2.threshold(img_blur,thresh,max,cv2.THRESH_BINARY)
-        th2 = cv2.adaptiveThreshold(th1,max,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,11,2)
-        return th2
+        img = cv2.medianBlur(img,5)
+        #ret,img = cv2.threshold(img,thresh,max,cv2.THRESH_BINARY)                                  #Skal gjøre gjøre bilde sort/hvitt men funker ikke. Vet ikke hvofor   
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)                                                 #Gjør bilde sort/hvitt 
+        img = cv2.adaptiveThreshold(img,max,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,201,2)      # "filtrer" bilde, gir klarer kanter 
+        return img 
+    elif(type == "gauss"):
+        img = cv2.medianBlur(img,5)
+        #ret,th1 = cv2.threshold(img_blur,thresh,max,cv2.THRESH_BINARY)                             #Skal gjøre gjøre bilde sort/hvitt men funker ikke. Vet ikke hvofor 
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)                                                 #Gjør bilde sort/hvitt     
+        img = cv2.adaptiveThreshold(img ,max,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,201,2) #"filtrer" bilde, gir klarer kanter på en annen måte 
+        return img
     else:
-        img_blur = cv2.medianBlur(img,5)
-        ret,th1 = cv2.threshold(img_blur,thresh,max,cv2.THRESH_BINARY)
-        th3 = cv2.adaptiveThreshold(th1,max,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,11,2)
-        return th3
+        #ret,th1 = cv2.threshold(img,thresh,max,cv2.THRESH_BINARY)                                 #Skal gjøre gjøre bilde sort/hvitt men funker ikke. Vet ikke hvofor                                                                                                    
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)                                                #Gjør bilde sort/hvit  
+        return img 
+
 
 
 
@@ -35,24 +44,26 @@ if __name__ == "__main__":
     detector = bd.blobDetector()                                    #første detection
 
 
-    while rval:                                                    #fortsetter å ta bilder så lenge det går, methink
-        
-        rval, frame = vc.read()                                     #tar nytt bilde
-        frame = cv2.resize(frame, (650,500))                        #reskalerer for vindu, fungerer ikke som planlagt (endre pixler)                      
+    while rval:                                                     #fortsetter å ta bilder så lenge det går, methink
+        rval, frame = vc.read()      
+        frame_Adapt = frame                                         #tar nytt bilde
+        #frame = cv2.resize(frame, (650,500))                       #reskalerer for vindu, fungerer ikke som planlagt (endre pixler)                      
         mask = cv2.inRange(frame, redLower, redUpper)               #har ingen anelse hvordan mask opplegget fungerer, men det må til for å filterer bort alt fra bildet
         mask = cv2.erode(mask, None, iterations=0)                  #som ikke er rødt
         mask = cv2.dilate(mask, None, iterations=0) 
-        #frame_Adapt = cv2.imread(frame, CV_8UC1)
         frame = cv2.bitwise_and(frame,frame,mask = mask)            #dette gir et rart bilde
-        cv2.imshow("34", frame)
+        cv2.imshow("0", frame)
        
         #Adaptive thresh forsøk
-        #th2 = adaptive_thresh(frame,127,255,"mean")
-        th1 = adaptive_thresh(frame,127,255,"mean")
-        #th = adaptive_thresh(frame_Adapt,127,255,"bin")
+        th2 = adaptive_thresh(frame_Adapt,127,255,"mean")
+        th1 = adaptive_thresh(frame,127,255,"bin")
+        th = adaptive_thresh(frame_Adapt,127,255,"bin")
+        #th3 = adaptive_thresh(frame_Adapt,127,255,"otsu")
         #cv2.imshow("mean", th2)
-        # cv2.imshow("gauss", th1)
+        #cv2.imshow("gauss", th1)
         #cv2.imshow("bin", th)
+        #cv2.imshow("otsu", th3)
+
 
         #Adaptive thresh forsøk 
 
@@ -60,12 +71,15 @@ if __name__ == "__main__":
         cv2.imshow("1", frame)
         frame = 255 -frame                                          #her inverteres svart rødt bilde (detector-funksjonen detekterer mørke objekt på lys bakgrunn, dette kan endres though)
         cv2.imshow("2", frame)
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)             #gjør bildet om til gråskala
+        frame_2 = adaptive_thresh(frame,127,255,"mean")              # her blir bilde gjort til gråskala og mulig noe filtrering
         cv2.imshow("3", frame)
-        (thres, frame) = cv2.threshold(frame, 190, 255, cv2.THRESH_BINARY)  #her bruker man en treshold så man får bilder i svart-hvitt
-        cv2.imshow("4", frame)
-        newFrame = bd.detectStuff(frame, detector)                  #bildegjennkjenning
+        #(thres, frame) = cv2.threshold(frame, 190, 255, cv2.THRESH_BINARY)  #her bruker man en treshold så man får bilder i svart-hvitt
+        #cv2.imshow("4", frame)
+        frame_1 = adaptive_thresh(frame,127,255,"bin")
+        newFrame = bd.detectStuff(frame_2, detector)                  #bildegjennkjenning
+        newFrame_1 = bd.detectStuff(frame_1, detector)      
         cv2.imshow("preview", newFrame)                             #viser resultatet og starter loop på nytt
+        cv2.imshow("comp",newFrame_1)
 
     
         if cv2.waitKey(30) == 27: # exit on ESC                     #avslutter programmet og lukker alle viduer dersom man trykker ESC
