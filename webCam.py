@@ -1,33 +1,10 @@
 import cv2
 import blobDetect as bd
 import numpy as np
+from Image_process import *
 
 redLower = (20,10,10)                                                #100,130,50 skal være for å filtrere rød farge
 redUpper = (100,255,255)                                             #200,200,130
-
-def adaptive_thresh(img,thresh,max,type):
-    if(type == "otsu"):
-        #Otsu thersholding 
-        blur = cv2.GaussianBlur(img,(5,5),0)                                                        #Gaussian blur
-        ret3,img = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)                      #Ny metode for å filterere bilde (usikkert om vi kan brukde det)
-        return img 
-    elif(type == "mean"):
-        img = cv2.medianBlur(img,5)
-        #ret,img = cv2.threshold(img,thresh,max,cv2.THRESH_BINARY)                                  #Skal gjøre gjøre bilde sort/hvitt men funker ikke. Vet ikke hvofor   
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)                                                 #Gjør bilde sort/hvitt 
-        img = cv2.adaptiveThreshold(img,max,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,201,2)      # "filtrer" bilde, gir klarer kanter 
-        return img 
-    elif(type == "gauss"):
-        img = cv2.medianBlur(img,5)
-        #ret,th1 = cv2.threshold(img_blur,thresh,max,cv2.THRESH_BINARY)                             #Skal gjøre gjøre bilde sort/hvitt men funker ikke. Vet ikke hvofor 
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)                                                 #Gjør bilde sort/hvitt     
-        img = cv2.adaptiveThreshold(img ,max,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,201,2) #"filtrer" bilde, gir klarer kanter på en annen måte 
-        return img
-    else:
-        #ret,th1 = cv2.threshold(img,thresh,max,cv2.THRESH_BINARY)                                 #Skal gjøre gjøre bilde sort/hvitt men funker ikke. Vet ikke hvofor                                                                                                    
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)                                                #Gjør bilde sort/hvit  
-        return img 
-
 
 
 
