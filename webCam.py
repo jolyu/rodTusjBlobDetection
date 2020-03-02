@@ -7,7 +7,6 @@ redLower = (20,10,10)                                                #100,130,50
 redUpper = (100,255,255)                                             #200,200,130
 
 
-
 if __name__ == "__main__":
     cv2.namedWindow("preview")                                      #åpner vindu
     vc = cv2.VideoCapture(0)                                        #tar er bilde med webCam
